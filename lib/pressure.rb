@@ -1,4 +1,4 @@
-require 'pressure/version'
+require_relative 'pressure/version'
 require 'logger'
 require 'time'
 require 'json'
@@ -6,11 +6,13 @@ require 'json'
 class Pressure
   attr_accessor :wrapper_template
   attr_reader :sockets
+  attr_reader :options
 
   def initialize(options = {}, &data_source_block)
     @wrapper_template = {}
     @current_upstream = {}
     @send_queue = Queue.new
+    @options = options
     @sockets = []
     @websocket_worker_delay = options[:websocket_worker_delay] || (1.0 / 20.0)
     incoming_monitor(&data_source_block)
@@ -42,7 +44,11 @@ class Pressure
           upstream_data = data_source_block.call
           if data_changed?(data[:upstream_data], upstream_data)
             data = wrap_data(upstream_data)
-            @send_queue << data
+            if @options[:no_wrap]
+              @send_queue << upstream_data
+            else
+              @send_queue << data
+            end
           end
           sleep(1.0 / 20.0)
         end

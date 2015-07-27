@@ -1,20 +1,24 @@
 require 'sinatra'
 require 'sinatra-websocket'
-require 'pressure'
+require_relative '../lib/pressure'
 
 set :server, 'thin'
 set :sockets, []
 
 data = {}
 
+def random_string
+  (0...8).map { (65 + rand(26)).chr }.join
+end
+
 Thread.new do
   loop do
-    data = (0...8).map { (65 + rand(26)).chr }.join
+    data = [random_string, random_string, random_string, random_string]
     sleep(1.0 / 0.2)
   end
 end
 
-pressure = Pressure.new do
+pressure = Pressure.new(no_wrap: false) do
   data
 end
 
