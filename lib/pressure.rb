@@ -6,15 +6,15 @@ require 'json'
 class Pressure
   attr_accessor :wrapper_template
   attr_reader :sockets
-  attr_reader :options
 
   def initialize(options = {}, &data_source_block)
     @wrapper_template = {}
     @current_upstream = {}
     @send_queue = Queue.new
-    @options = options
     @sockets = []
     @websocket_worker_delay = options[:websocket_worker_delay] || (1.0 / 20.0)
+    @incoming_monitor_delay = options[:incoming_monitor_delay] || (1.0 / 20.0)
+    @no_wrap = options[:no_wrap] || false
     incoming_monitor(&data_source_block)
     websocket_worker_loop
   end
@@ -28,12 +28,16 @@ class Pressure
   end
 
   def wrap_data(data)
-    @wrapper_template.merge(upstream_data: data.clone,
+    @wrapper_template.merge(upstream_data: Marshal.load(Marshal.dump(data)),
                             last_update_ts: Time.now.utc.to_i)
   end
 
   def data_changed?(current_data, previous_data)
-    current_data != previous_data
+    if current_data && previous_data
+      current_data != previous_data
+    else
+      true
+    end
   end
 
   def incoming_monitor(&data_source_block)
@@ -42,9 +46,9 @@ class Pressure
         data = {}
         loop do
           upstream_data = data_source_block.call
-          if data_changed?(data[:upstream_data], upstream_data)
+          if data_changed?(upstream_data, data[:upstream_data])
             data = wrap_data(upstream_data)
-            if @options[:no_wrap]
+            if @no_wrap
               @send_queue << upstream_data
             else
               @send_queue << data
