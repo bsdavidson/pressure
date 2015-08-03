@@ -21,6 +21,7 @@ class Pressure
 
   def <<(socket)
     @sockets << socket
+    socket.send JSON.generate(@current_upstream)
   end
 
   def delete(socket)
@@ -48,13 +49,14 @@ class Pressure
           upstream_data = data_source_block.call
           if data_changed?(upstream_data, data[:upstream_data])
             data = wrap_data(upstream_data)
+            @current_upstream = data
             if @no_wrap
               @send_queue << upstream_data
             else
               @send_queue << data
             end
           end
-          sleep(1.0 / 20.0)
+          sleep(@incoming_monitor_delay)
         end
       rescue => e
         puts "error #{e}"
