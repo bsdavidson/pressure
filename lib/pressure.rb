@@ -51,7 +51,7 @@ class Pressure
             data = wrap_data(upstream_data)
             @current_upstream = data
             if @no_wrap
-              @send_queue << upstream_data
+              @send_queue << [upstream_data]
             else
               @send_queue << data
             end
