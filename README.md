@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/bsdavidson/pressure.svg?branch=master)](https://travis-ci.org/bsdavidson/pressure)
 
-Multicast upstream data to downstream websocket clients.
+Broadcast upstream data to downstream websocket clients.
 
 Documentation is [available on RubyDoc.info](http://www.rubydoc.info/github/bsdavidson/pressure/).
 
